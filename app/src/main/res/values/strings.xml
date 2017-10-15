@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">SSCMaster</string>
+    <string name="refresh">Refresh</string>
+    <string name="section">Section:</string>
+    <string name="search">Search</string>
+    <string name="clear">Clear</string>
+    <string name="recent">Recent:</string>
+    <string name="cancel">Cancel</string>
+</resources>
