@@ -1,13 +1,17 @@
 package will.sscmaster;
 
+import android.content.Context;
+import android.graphics.Point;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -37,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initData() {
         facultyData = readFacultyList();
+        readAllData();
     }
 
     private void initView() {
@@ -82,6 +87,24 @@ public class MainActivity extends AppCompatActivity {
             return temp.split(";");
         } catch(IOException e) {
             return new String[1];
+        }
+    }
+
+    private void readAllData() {
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("allData.json"), "UTF-8");
+            BufferedReader br = new BufferedReader(inputStreamReader);
+            String line = br.readLine();
+            while (line != null) {
+                stringBuilder.append(line);
+                line = br.readLine();
+            }
+            br.close();
+            inputStreamReader.close();
+            String temp = stringBuilder.toString();
+        } catch(IOException e) {
+
         }
     }
 }

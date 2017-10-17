@@ -67,10 +67,10 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
         Point size = new Point();
         display.getSize(size);
 
-        // TODO: find a nicer way to get a random size of height for the button
-//        holder.button.getLayoutParams().height = getRandomIntInRange(250,180);
-        holder.button.getLayoutParams().height = (size.y / 5) + mRandom.nextInt(size.y / 5);
-        holder.button.getLayoutParams().width = (size.x / 2 ) - size.x / 16;
+        // TODO: find a nicer way to render a random size of height for the button
+        holder.button.getLayoutParams().height = getRandomIntInRange(250,200);
+//        holder.button.getLayoutParams().height = (size.y / 5) + mRandom.nextInt(size.y / 5);
+        holder.button.getLayoutParams().width = (size.x / 2 ) - size.x / 100;
     }
 
     private void setData(ViewHolder holder, int position) {
