@@ -39,6 +39,8 @@ public class ParseObjectData {
                 temp.setCredits(jsonObject.getString("credits"));
                 temp.setDescription(jsonObject.getString("description"));
                 temp.setReqs(jsonObject.getString("reqs"));
+
+                // TODO: find a better algorithm to load section data
 //                creatSectionObject(temp, jsonObject.getJSONArray("sections"));
 
                 result.add(temp);
