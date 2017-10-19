@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.List;
 import java.util.Random;
@@ -59,6 +60,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
     public void onBindViewHolder(MainListAdapter.ViewHolder holder, int position) {
         setWidthHeight(holder);
         setData(holder, position);
+        setOnClickListener(holder, position);
     }
 
     private void setWidthHeight(ViewHolder holder) {
@@ -67,7 +69,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
         Point size = new Point();
         display.getSize(size);
 
-        // TODO: find a nicer way to render a random size of height for the button
+        // TODO: find a nicer way to render button
         holder.button.getLayoutParams().height = getRandomIntInRange(250,200);
 //        holder.button.getLayoutParams().height = (size.y / 5) + mRandom.nextInt(size.y / 5);
         holder.button.getLayoutParams().width = (size.x / 2 ) - size.x / 100;
@@ -76,6 +78,15 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
     private void setData(ViewHolder holder, int position) {
         holder.button.setText(dataset[position]);
         holder.button.setBackgroundColor(Color.parseColor(colorset[position]));
+    }
+
+    private void setOnClickListener(final ViewHolder holder, int position) {
+        holder.button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context, holder.button.getText(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
