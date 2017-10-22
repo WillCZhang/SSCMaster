@@ -15,6 +15,7 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.Random;
 
+import will.sscmaster.MainActivity;
 import will.sscmaster.R;
 
 /**
@@ -60,7 +61,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
     public void onBindViewHolder(MainListAdapter.ViewHolder holder, int position) {
         setWidthHeight(holder);
         setData(holder, position);
-        setOnClickListener(holder, position);
+        setOnClickListener(holder);
     }
 
     private void setWidthHeight(ViewHolder holder) {
@@ -80,11 +81,16 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
         holder.button.setBackgroundColor(Color.parseColor(colorset[position]));
     }
 
-    private void setOnClickListener(final ViewHolder holder, int position) {
+    private void setOnClickListener(final ViewHolder holder) {
         holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, holder.button.getText(), Toast.LENGTH_LONG).show();
+                if (context instanceof MainActivity) {
+                    MainActivity temp = (MainActivity) context;
+                    temp.switchToSubList(holder.button.getText().toString(), holder.button.getDrawingCacheBackgroundColor());
+                } else {
+                    Toast.makeText(context, "!!!!", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
