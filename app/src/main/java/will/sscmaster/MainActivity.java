@@ -2,7 +2,6 @@ package will.sscmaster;
 
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -11,41 +10,43 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ParseObjectData;
+import will.sscmaster.HandleData.FacultyDepartmentDataPairHandler;
 import will.sscmaster.SupportingUI.MainListAdapter;
 import will.sscmaster.SupportingUI.SubListAdapter;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String FACULTY_DEPARTMENT_PAIR = "FacultyDepartmentPair.json";
     public static final String FACULTY_LIST = "faculty_list";
     public static final String ALL_DATA = "allData.json";
 
-    private String[] facultyData;
     private RecyclerView mainList;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private boolean isSubList;
-    private RecyclerView.Adapter subListAdapter;
-    private RecyclerView.LayoutManager subListLayoutManager;
+    private ExpandableListView sublist;
+    private ExpandableListAdapter subListAdapter;
+//    private RecyclerView.Adapter subListAdapter;
+//    private RecyclerView.LayoutManager subListLayoutManager;
 
     private Set<CourseObject> courseDataset;
     private Map<String, List<CourseObject>> facultyCoursePair;
+
+    private List<String> facultyData;
+    private Map<String, List<String>> facultyDepartmentPair;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,36 +58,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        facultyData = readFacultyList();
-        readAllData();
-
-        facultyCoursePair = new HashMap<>();
-        new PairFacultyCourse().execute(courseDataset);
+        readFacultyDepartmentPair();
     }
 
     private void initView() {
         mainList = (RecyclerView) findViewById(R.id.mainlist);
         mAdapter = new MainListAdapter(facultyData, this);
         mLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        mainList.setLayoutManager(mLayoutManager);
+        mainList.setAdapter(mAdapter);
+
+        sublist = (ExpandableListView) findViewById(R.id.sublist);
+        subListAdapter = new SubListAdapter(..., this); // TODO: implement constructor
         setToMainList();
     }
 
     private void setToMainList() {
-        mainList.setLayoutManager(mLayoutManager);
-        mainList.setAdapter(mAdapter);
         isSubList = false;
+        sublist.getLayoutParams().height = 0;
     }
 
-    public void switchToSubList(String faculty, int color) {
+    public void switchToSubList(String faculty) {
         if (!isSubList) {
-            isSubList = true;
-            Object[] tempData = new Object[2];
-            tempData[0] = facultyCoursePair.get(faculty);
-            tempData[1] = color;
-            subListAdapter = new SubListAdapter(tempData, this);
-            subListLayoutManager = new GridLayoutManager(this, 4);
-            mainList.setLayoutManager(subListLayoutManager);
-            mainList.setAdapter(subListAdapter);
+//            List<String> departmentList = facultyDepartmentPair.get(faculty);
+//            subListAdapter = new SubListAdapter(departmentList, this);
+//            subListLayoutManager = new GridLayoutManager(this, 4);
+//            mainList.setLayoutManager(subListLayoutManager);
+//            mainList.setAdapter(subListAdapter);
+//            isSubList = true;
         } else {
 
         }
@@ -118,15 +117,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // return an array of string in a form of "faculty_name,color"
-    private String[] readFacultyList() {
-        String temp = readLocalData(FACULTY_LIST);
-        return temp.split(";");
-    }
-
-    private void readAllData() {
-        String temp = readLocalData(ALL_DATA);
-        courseDataset = ParseObjectData.parseJson(temp);
+    private void readFacultyDepartmentPair() {
+        String temp = readLocalData(FACULTY_DEPARTMENT_PAIR);
+        facultyData = FacultyDepartmentDataPairHandler.keySetHandler(temp);
+        facultyDepartmentPair = FacultyDepartmentDataPairHandler.mapHandler(temp);
     }
 
     @NonNull
@@ -159,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
         private final static String LFS = "Faculty of Land and Food System";
         private final static String DENTISTRY = "Faculty of Dentistry";
         private final static String MUSIC = "School of Music";
+        private final static String LAW = "Peter A. Allard School of Law";
         private final static String OTHERS = "Others";
 
         @Override
@@ -192,6 +187,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case MUSIC:
                         addToPair(course, MUSIC);
+                        break;
+                    case LAW:
+                        addToPair(course, LAW);
                         break;
                     default:
                         addToPair(course, OTHERS);

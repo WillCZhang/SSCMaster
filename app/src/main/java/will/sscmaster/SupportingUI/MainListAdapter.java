@@ -3,6 +3,8 @@ package will.sscmaster.SupportingUI;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.support.v4.util.ArraySet;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -12,8 +14,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import will.sscmaster.MainActivity;
 import will.sscmaster.R;
@@ -23,8 +28,8 @@ import will.sscmaster.R;
  */
 
 public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHolder> {
-    private String[] dataset;
-    private String[] colorset;
+    private List<String> dataset;
+    private List<Drawable> background;
     private Context context;
     private Random mRandom = new Random();
 
@@ -36,19 +41,15 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
         }
     }
 
-    public MainListAdapter (String[] dataset, Context context) {
-        preHandleData(dataset);
+    public MainListAdapter (List<String> dataset, Context context) {
         this.context = context;
+        this.dataset = dataset;
+        preHandleDrawable();
     }
 
-    private void preHandleData(String[] dataset) {
-        this.dataset = new String[dataset.length];
-        this.colorset = new String[dataset.length];
-
-        for (int i = 0; i < dataset.length; i++) {
-            this.dataset[i] = dataset[i].split(",")[0];
-            this.colorset[i] = dataset[i].split(",")[1];
-        }
+    private void preHandleDrawable() {
+        background = new ArrayList<>();
+        background.add(context.getDrawable(R.drawable.facultyofscience));
     }
 
     @Override
@@ -59,8 +60,8 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(MainListAdapter.ViewHolder holder, int position) {
-        setWidthHeight(holder);
         setData(holder, position);
+        setWidthHeight(holder);
         setOnClickListener(holder);
     }
 
@@ -71,14 +72,14 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
         display.getSize(size);
 
         // TODO: find a nicer way to render button
-        holder.button.getLayoutParams().height = getRandomIntInRange(250,200);
+        holder.button.getLayoutParams().height = getRandomIntInRange(200,150);
 //        holder.button.getLayoutParams().height = (size.y / 5) + mRandom.nextInt(size.y / 5);
         holder.button.getLayoutParams().width = (size.x / 2 ) - size.x / 100;
     }
 
     private void setData(ViewHolder holder, int position) {
-        holder.button.setText(dataset[position]);
-        holder.button.setBackgroundColor(Color.parseColor(colorset[position]));
+        holder.button.setText(dataset.get(position));
+        holder.button.setBackground(background.get(0));
     }
 
     private void setOnClickListener(final ViewHolder holder) {
@@ -87,7 +88,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
             public void onClick(View v) {
                 if (context instanceof MainActivity) {
                     MainActivity temp = (MainActivity) context;
-                    temp.switchToSubList(holder.button.getText().toString(), holder.button.getDrawingCacheBackgroundColor());
+                    temp.switchToSubList(holder.button.getText().toString());
                 } else {
                     Toast.makeText(context, "!!!!", Toast.LENGTH_LONG).show();
                 }
@@ -97,7 +98,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return dataset.length;
+        return dataset.size();
     }
 
     private int getRandomIntInRange(int max, int min){
