@@ -3,7 +3,8 @@ package will.sscmaster.Backend;
 import java.util.*;
 
 public class SectionObject {
-    private String section, status, activity;
+    private CourseObject courseObject;
+    private String sectionNumber, status, activity;
     private String instructor;
     private String instructorWebsite;
     private String classroom;
@@ -15,9 +16,23 @@ public class SectionObject {
     private Map<String, String> timeMap;
     private int totalSeats, currentRegistered, restrictSeats, generalSeats;
 
+    public SectionObject(CourseObject courseObject, String sectionNumber) {
+        this.activity = "";
+        this.courseObject = courseObject;
+        this.sectionNumber = sectionNumber;
+        this.status = "";
+        this.instructor = "TBA";
+        this.instructorWebsite = "";
+        this.classroom = "";
+        this.term = "";
+        this.restrictTo = "";
+        timeMap = new HashMap<String, String>();
+        days = new HashSet<>();
+    }
+
     public SectionObject(String section, String status, String activity, String term) {
         this.activity = activity;
-        this.section = section;
+        this.sectionNumber = section;
         this.status = status;
         this.instructor = "TBA";
         this.instructorWebsite = "";
@@ -47,6 +62,23 @@ public class SectionObject {
         }
     }
 
+    @Override
+    public String toString() {
+        return courseObject.toString()+ sectionNumber;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setActivity(String activity) {
+        this.activity = activity;
+    }
+
+    public void setTerm(String term) {
+        this.term = term;
+    }
+
     public void setRestrictTo(String restrictTo) {
         this.restrictTo = restrictTo;
     }
@@ -71,8 +103,8 @@ public class SectionObject {
         this.classroom = classroom;
     }
 
-    public String getSection() {
-        return section;
+    public String getSectionNumber() {
+        return sectionNumber;
     }
 
     public String getStatus() {

@@ -8,7 +8,6 @@ public class CourseObject {
     private String departmentFullName;
     private String departmentShortName;
     private String courseNumber;
-
     private String courseName;
     private String description;
     private String credits;
@@ -19,7 +18,6 @@ public class CourseObject {
     public CourseObject(String departmentShortName, String courseNumber) {
         this.departmentShortName = departmentShortName;
         this.courseNumber = courseNumber;
-
         departmentFullName = "";
         faculty = "";
         courseName = "";
@@ -27,6 +25,15 @@ public class CourseObject {
         credits = "";
         reqs = "";
         sections = new HashSet<>();
+    }
+
+    public void addSection(SectionObject s) {
+        sections.add(s);
+    }
+
+    @Override
+    public String toString() {
+        return departmentShortName + " " +courseNumber;
     }
 
     public void setFaculty(String faculty) {

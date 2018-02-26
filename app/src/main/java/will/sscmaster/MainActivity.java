@@ -1,52 +1,43 @@
 package will.sscmaster;
 
-import android.os.AsyncTask;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ExpandableListAdapter;
-import android.widget.ExpandableListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import will.sscmaster.Backend.CourseObject;
-import will.sscmaster.Backend.ParseObjectData;
-import will.sscmaster.HandleData.FacultyDepartmentDataPairHandler;
-import will.sscmaster.SupportingUI.MainListAdapter;
-import will.sscmaster.SupportingUI.SubListAdapter;
+import will.sscmaster.DataParser.FacultyDepartmentPairHandler;
+import will.sscmaster.UIController.MainListAdapter;
 
 public class MainActivity extends AppCompatActivity {
     public static final String FACULTY_DEPARTMENT_PAIR = "FacultyDepartmentPair.json";
+    public static final String DEPARTMENT_COURSE_PAIR = "DepartmentCoursePair.json";
     public static final String FACULTY_LIST = "faculty_list";
     public static final String ALL_DATA = "allData.json";
 
     private RecyclerView mainList;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private boolean isSubList;
-    private ExpandableListView sublist;
-    private ExpandableListAdapter subListAdapter;
-//    private RecyclerView.Adapter subListAdapter;
-//    private RecyclerView.LayoutManager subListLayoutManager;
 
     private Set<CourseObject> courseDataset;
     private Map<String, List<CourseObject>> facultyCoursePair;
 
     private List<String> facultyData;
     private Map<String, List<String>> facultyDepartmentPair;
+    private Map<String, List<String>> departmentCoursePair;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,41 +53,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
+        initMainList();
+    }
+
+    private void initMainList() {
         mainList = (RecyclerView) findViewById(R.id.mainlist);
         mAdapter = new MainListAdapter(facultyData, this);
         mLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         mainList.setLayoutManager(mLayoutManager);
         mainList.setAdapter(mAdapter);
-
-        sublist = (ExpandableListView) findViewById(R.id.sublist);
-        subListAdapter = new SubListAdapter(..., this); // TODO: implement constructor
-        setToMainList();
     }
 
-    private void setToMainList() {
-        isSubList = false;
-        sublist.getLayoutParams().height = 0;
-    }
-
-    public void switchToSubList(String faculty) {
-        if (!isSubList) {
-//            List<String> departmentList = facultyDepartmentPair.get(faculty);
-//            subListAdapter = new SubListAdapter(departmentList, this);
-//            subListLayoutManager = new GridLayoutManager(this, 4);
-//            mainList.setLayoutManager(subListLayoutManager);
-//            mainList.setAdapter(subListAdapter);
-//            isSubList = true;
-        } else {
-
-        }
+    public void switchToCourseView(String faculty) {
+        Intent courseView = new Intent(this, CourseViewActivity.class);
+        courseView.putExtra(CourseViewActivity.FACULTY, faculty);
+        startActivity(courseView);
     }
 
     @Override
     public void onBackPressed() {
-        if (isSubList) {
-            isSubList = false;
-            setToMainList();
-        }
+
     }
 
     @Override
@@ -118,13 +94,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readFacultyDepartmentPair() {
-        String temp = readLocalData(FACULTY_DEPARTMENT_PAIR);
-        facultyData = FacultyDepartmentDataPairHandler.keySetHandler(temp);
-        facultyDepartmentPair = FacultyDepartmentDataPairHandler.mapHandler(temp);
+        String temp = readAssertData(FACULTY_DEPARTMENT_PAIR);
+        FacultyDepartmentPairHandler.mapHandler(temp);
+        facultyData = FacultyDepartmentPairHandler.getKeySet();
+        facultyDepartmentPair = FacultyDepartmentPairHandler.getMap();
     }
 
     @NonNull
-    private String readLocalData(String require) {
+    private String readAssertData(String require) {
         StringBuilder stringBuilder = new StringBuilder();
         try {
             InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open(require), "UTF-8");
@@ -140,85 +117,5 @@ public class MainActivity extends AppCompatActivity {
             Log.e("ERROR", "Can't read local data");
         }
         return stringBuilder.toString();
-    }
-
-    private class PairFacultyCourse extends AsyncTask<Set<CourseObject>, String, String> {
-        private Toast toast;
-        private final static String SCIENCE = "Faculty of Science";
-        private final static String ARTS = "Faculty of Arts";
-        private final static String SAUDER = "Sauder School of Business";
-        private final static String ENGEERING = "Faculty of Applied Science";
-        private final static String EDUCATION = "Faculty of Education";
-        private final static String FORESTRY = "Faculty of Forestry";
-        private final static String LFS = "Faculty of Land and Food System";
-        private final static String DENTISTRY = "Faculty of Dentistry";
-        private final static String MUSIC = "School of Music";
-        private final static String LAW = "Peter A. Allard School of Law";
-        private final static String OTHERS = "Others";
-
-        @Override
-        protected String doInBackground(Set<CourseObject>... params) {
-            Set<CourseObject> allData = params[0];
-            for (CourseObject course : allData) {
-                switch(course.getFaculty()) {
-                    case SCIENCE:
-                        addToPair(course, SCIENCE);
-                        break;
-                    case ARTS:
-                        addToPair(course, ARTS);
-                        break;
-                    case DENTISTRY:
-                        addToPair(course, DENTISTRY);
-                        break;
-                    case ENGEERING:
-                        addToPair(course, ENGEERING);
-                        break;
-                    case EDUCATION:
-                        addToPair(course, EDUCATION);
-                        break;
-                    case "Faculty of Comm and Bus Admin":
-                        addToPair(course, SAUDER);
-                        break;
-                    case FORESTRY:
-                        addToPair(course, FORESTRY);
-                        break;
-                    case LFS:
-                        addToPair(course, LFS);
-                        break;
-                    case MUSIC:
-                        addToPair(course, MUSIC);
-                        break;
-                    case LAW:
-                        addToPair(course, LAW);
-                        break;
-                    default:
-                        addToPair(course, OTHERS);
-                        break;
-                }
-            }
-            return "Finished";
-        }
-
-        private void addToPair(CourseObject course, String faculty) {
-            List<CourseObject> temp = facultyCoursePair.get(faculty);
-            if (temp != null)
-                temp.add(course);
-            else {
-                temp = new ArrayList<>();
-                temp.add(course);
-                facultyCoursePair.put(faculty, temp);
-            }
-        }
-
-        @Override
-        protected void onPreExecute() {
-            toast = Toast.makeText(getApplicationContext(), "Loading data... Please wait", Toast.LENGTH_LONG);
-            toast.show();
-        }
-
-        @Override
-        protected void onPostExecute(String response) {
-            toast.cancel();
-        }
     }
 }
