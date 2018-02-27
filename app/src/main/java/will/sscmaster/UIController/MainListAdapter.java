@@ -33,9 +33,9 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.ViewHo
     private Context context;
     private Random mRandom = new Random();
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
         Button button;
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             button = (Button) itemView.findViewById(R.id.faculty);
         }

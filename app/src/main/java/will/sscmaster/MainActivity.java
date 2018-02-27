@@ -65,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void switchToCourseView(String faculty) {
-        Intent courseView = new Intent(this, CourseViewActivity.class);
-        courseView.putExtra(CourseViewActivity.FACULTY, faculty);
+        Intent courseView = new Intent(this, ListActivity.class);
+        courseView.putExtra(ListActivity.FACULTY, faculty);
         startActivity(courseView);
     }
 

@@ -1,7 +1,6 @@
 package will.sscmaster.DataParser;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,6 +15,8 @@ import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Time;
+import java.util.HashMap;
+import java.util.Map;
 
 import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ObjectManager;
@@ -30,6 +31,7 @@ public class RequestData {
     public static final String DEPARTMENT_URL = "https://courses.students.ubc.ca/cs/main?pname=subjarea&tname=subjareas&req=1&dept=";
     public static final String SECTION_URL = "https://courses.students.ubc.ca/cs/main?pname=subjarea&tname=subjareas&req=3&dept=";
     public static final String COURSE_URL_EXTRA = "&course=";
+    private static Map<SectionObject, Elements> elementsMap = new HashMap<>();
     private static ObjectManager objectManager = ObjectManager.getInstance();
     private static SectionObject lastSection;
 
@@ -78,95 +80,100 @@ public class RequestData {
         } catch (IOException ignored) {}
     }
 
-    public static synchronized void refreshEachSection(CourseObject editingCourse, Element sectionElement) {
-        try {
-            Elements sectionInfo = sectionElement.getElementsByTag("td");
-            String status = sectionInfo.get(0).text();
-            String courseFullInfo = sectionInfo.get(1).text();
-            if (!courseFullInfo.equals("") && !courseFullInfo.equals(" ")) {
-                String section = sectionInfo.get(1).text().split(" ")[2];
-                String activity = sectionInfo.get(2).text();
-                String term = sectionInfo.get(3).text();
+    private static synchronized void refreshEachSection(CourseObject editingCourse, Element sectionElement) throws IOException {
+        Elements sectionInfo = sectionElement.getElementsByTag("td");
+        String status = sectionInfo.get(0).text();
+        String courseFullInfo = sectionInfo.get(1).text();
+        if (!courseFullInfo.equals("") && !courseFullInfo.equals(" ")) {
+            String section = sectionInfo.get(1).text().split(" ")[2];
+            String activity = sectionInfo.get(2).text();
+            String term = sectionInfo.get(3).text();
+            // ignore all the sections that are blocked
+            if (activity.equals("Blocked"))
+                return;
+            SectionObject currentSection = new SectionObject(editingCourse, section);
+            currentSection.setActivity(activity);
+            currentSection.setStatus(status);
+            currentSection.setTerm(term);
+            setTimeForSection(sectionInfo, currentSection);
+            editingCourse.addSection(currentSection);
+            lastSection = currentSection;
+            elementsMap.put(currentSection, sectionInfo);
+            objectManager.addSection(currentSection);
+//            addSectionContent(currentSection); // TODO: test the performance with this very expensive statement
+        } else // if one sectionElement has separated colums storing info
+            setTimeForSection(sectionInfo, lastSection);
+    }
 
-                String urlForSectionInfo = sectionInfo.get(1).getElementsByTag("a").attr("href");
-                String sectionInfoText = reading(PREFIX + urlForSectionInfo);
-                Document sectionInfoDoc = Jsoup.parse(sectionInfoText);
-                Element sectionPage = sectionInfoDoc.getElementsByClass("content expand").first();
+    public static void addSectionContent(SectionObject currentSection) throws IOException {
+        Elements sectionInfo = elementsMap.get(currentSection);
+        String urlForSectionInfo = sectionInfo.get(1).getElementsByTag("a").attr("href");
+        String sectionInfoText = reading(PREFIX + urlForSectionInfo);
+        Document sectionInfoDoc = Jsoup.parse(sectionInfoText);
+        Element sectionPage = sectionInfoDoc.getElementsByClass("content expand").first();
 
-                // dealing with last day to withdraw
-                Element withdrawDay = sectionPage.getElementsByClass("table table-nonfluid").first();
-                Element withdrawInfoElement = withdrawDay.getElementsByTag("tbody").first();
-                String withdrawInfo = withdrawInfoElement.text();
+        // dealing with last day to withdraw
+        Element withdrawDay = sectionPage.getElementsByClass("table table-nonfluid").first();
+        Element withdrawInfoElement = withdrawDay.getElementsByTag("tbody").first();
+        String withdrawInfo = withdrawInfoElement.text();
 
-                // dealing with seats
-                Element seatsSummaryElement = sectionPage.getElementsByAttribute("table-nonfluid&#39;").first();
-                int total = 0;
-                int current = 0;
-                int general = 0;
-                int restricted = 0;
-                String restrictedTo = "";
-                if (seatsSummaryElement != null) {
-                    Element seatsInfoElement = seatsSummaryElement.getElementsByTag("tbody").first();
-                    String seatsInfoCombine = getSeatsInfo(seatsInfoElement);
-                    try {
-                        String[] seatsInfoArray = seatsInfoCombine.split("@");
-                        total = Integer.parseInt(seatsInfoArray[0]);
-                        current = Integer.parseInt(seatsInfoArray[1]);
-                        general = Integer.parseInt(seatsInfoArray[2]);
-                        restricted = Integer.parseInt(seatsInfoArray[3]);
-                        if (seatsInfoArray.length > 4)
-                            restrictedTo = seatsInfoArray[4];
-                    } catch (IndexOutOfBoundsException | NumberFormatException ignored) {}
-                }
-
-                // dealing with classroom info
-                Element classroomInfo = sectionPage.getElementsByClass("table  table-striped").first();
-                String building = "";
-                String classroomTemp = "";
-                if (classroomInfo != null) {
-                    Elements buildingInfoTable = classroomInfo.getElementsByTag("td");
-                    building = buildingInfoTable.get(4).text();
-                    classroomTemp = buildingInfoTable.get(5).text();
-                    if (building.equals("No Scheduled Meeting"))
-                        building = "No Scheduled Meeting";
-                }
-                String classroom = building + "," + classroomTemp;
-
-                // dealing with instructor info
-                Elements info = sectionPage.getElementsByTag("table");
-                Elements instructorInfoElements = findingInstructorInfo(info);
-                String instructor = "";
-                String instructorWeb = "";
-                if (instructorInfoElements != null) {
-                    instructor = instructorInfoElements.text().split(": ")[1];
-                    Element tempWeb = instructorInfoElements.tagName("a").first().getElementsByTag("a").get(1);
-                    instructorWeb = tempWeb.attr("href");
-                }
-
-                // ignore all the sections that are blocked
-                if (activity.equals("Blocked"))
-                    return;
-
-                // Set the sectionElement
-                SectionObject currentSection = new SectionObject(editingCourse, section);
-                currentSection.setClassroom(classroom);
-                currentSection.setInstructor(instructor);
-                currentSection.setInstructorWebsite(instructorWeb);
-                currentSection.setActivity(activity);
-                currentSection.setStatus(status);
-                currentSection.setTerm(term);
-                currentSection.setLastWithdraw(withdrawInfo);
-                currentSection.setSeatsInfo(total, current, restricted, general);
-                currentSection.setRestrictTo(restrictedTo);
-                editingCourse.addSection(currentSection);
-                lastSection = currentSection;
-                setTimeForSection(sectionInfo, currentSection);
-            } else { // if one sectionElement has separated colums storing info
-                setTimeForSection(sectionInfo, lastSection);
+        // dealing with seats
+        Element seatsSummaryElement = sectionPage.getElementsByAttribute("table-nonfluid&#39;").first();
+        int total = 0;
+        int current = 0;
+        int general = 0;
+        int restricted = 0;
+        String restrictedTo = "";
+        if (seatsSummaryElement != null) {
+            Element seatsInfoElement = seatsSummaryElement.getElementsByTag("tbody").first();
+            String seatsInfoCombine = getSeatsInfo(seatsInfoElement);
+            try {
+                String[] seatsInfoArray = seatsInfoCombine.split("@");
+                total = Integer.parseInt(seatsInfoArray[0]);
+                current = Integer.parseInt(seatsInfoArray[1]);
+                general = Integer.parseInt(seatsInfoArray[2]);
+                restricted = Integer.parseInt(seatsInfoArray[3]);
+                if (seatsInfoArray.length > 4)
+                    restrictedTo = seatsInfoArray[4];
+            } catch (IndexOutOfBoundsException | NumberFormatException e) {
+                total = total == 0? 0 : total;
+                current = current == 0? 0 : current;
+                general = general == 0? 0 : general;
+                restricted = restricted == 0? 0 : restricted;
             }
-        } catch (IOException ignored) {
-
         }
+
+        // dealing with classroom info
+        Element classroomInfo = sectionPage.getElementsByClass("table  table-striped").first();
+        String building = "";
+        String classroomTemp = "";
+        if (classroomInfo != null) {
+            Elements buildingInfoTable = classroomInfo.getElementsByTag("td");
+            building = buildingInfoTable.get(4).text();
+            classroomTemp = buildingInfoTable.get(5).text();
+            if (building.equals("No Scheduled Meeting"))
+                building = "No Scheduled Meeting";
+        }
+        String classroom = building + "," + classroomTemp;
+
+        // dealing with instructor info
+        Elements info = sectionPage.getElementsByTag("table");
+        Elements instructorInfoElements = findingInstructorInfo(info);
+        String instructor = "";
+        String instructorWeb = "";
+        if (instructorInfoElements != null) {
+            instructor = instructorInfoElements.text().split(": ")[1];
+            Element tempWeb = instructorInfoElements.tagName("a").first().getElementsByTag("a").get(1);
+            instructorWeb = tempWeb.attr("href");
+        }
+
+        // Set the sectionElement
+        currentSection.setClassroom(classroom);
+        currentSection.setInstructor(instructor);
+        currentSection.setInstructorWebsite(instructorWeb);
+        currentSection.setLastWithdraw(withdrawInfo);
+        currentSection.setSeatsInfo(total, current, restricted, general);
+        currentSection.setRestrictTo(restrictedTo);
     }
 
     private static void setTimeForSection(Elements sectionInfo, SectionObject currentSection) {

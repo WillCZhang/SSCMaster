@@ -48,6 +48,10 @@ public class CourseListAdapter extends ArrayAdapter<String> {
         return secondList.get(position);
     }
 
+    public String getCourse(int position) {
+        return secondList.get(position);
+    }
+
     private void prepareData(List<String> values) {
         Collections.sort(values);
         firstList = new ArrayList<>(values.size());
@@ -82,7 +86,6 @@ public class CourseListAdapter extends ArrayAdapter<String> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder viewHolder;
-
         if (convertView == null) {
             LayoutInflater inflater = ((Activity) context).getLayoutInflater();
             convertView = inflater.inflate(R.layout.course_list_view, parent, false);

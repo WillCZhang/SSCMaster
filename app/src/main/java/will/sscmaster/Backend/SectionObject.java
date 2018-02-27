@@ -64,7 +64,7 @@ public class SectionObject {
 
     @Override
     public String toString() {
-        return courseObject.toString()+ sectionNumber;
+        return sectionNumber + " Term: " + term + " " + status;
     }
 
     public void setStatus(String status) {
@@ -72,7 +72,7 @@ public class SectionObject {
     }
 
     public void setActivity(String activity) {
-        this.activity = activity;
+        this.activity = activity.equals("")? "No Specified Activity" : activity;
     }
 
     public void setTerm(String term) {
@@ -161,5 +161,9 @@ public class SectionObject {
 
     public String getInstructorWebsite() {
         return instructorWebsite;
+    }
+
+    public CourseObject getCourseObject() {
+        return courseObject;
     }
 }

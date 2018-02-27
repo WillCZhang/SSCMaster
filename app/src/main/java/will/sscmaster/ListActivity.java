@@ -20,7 +20,7 @@ import will.sscmaster.DataParser.FacultyDepartmentPairHandler;
 import will.sscmaster.DataParser.RequestData;
 import will.sscmaster.UIController.CourseListAdapter;
 
-public class CourseViewActivity extends AppCompatActivity {
+public class ListActivity extends AppCompatActivity {
     public static final String FACULTY = "selectedFaculty";
     private ListView list;
     private CourseListAdapter listAdapter;
@@ -33,7 +33,7 @@ public class CourseViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_course_view);
+        setContentView(R.layout.activity_course_list);
 
         initData();
         initView();
@@ -62,7 +62,10 @@ public class CourseViewActivity extends AppCompatActivity {
                     temp.execute(listAdapter.getDepartment(position));
                     shouldClose = false;
                 } else {
-                    // TODO: section list view
+                    String courseObject = listAdapter.getCourse(position);
+                    Intent course = new Intent(getApplicationContext(), CourseView.class);
+                    course.putExtra(CourseView.COURSE, courseObject);
+                    startActivity(course);
                 }
             }
         });

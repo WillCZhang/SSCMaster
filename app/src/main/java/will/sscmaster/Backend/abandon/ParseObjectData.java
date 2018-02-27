@@ -1,4 +1,4 @@
-package will.sscmaster.Backend;
+package will.sscmaster.Backend.abandon;
 
 import android.util.Log;
 
@@ -12,6 +12,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import will.sscmaster.Backend.CourseObject;
+import will.sscmaster.Backend.SectionObject;
 
 public class ParseObjectData {
     private static JSONArray jsonArray;
