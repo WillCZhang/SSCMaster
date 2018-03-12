@@ -1,16 +1,27 @@
 package will.sscmaster;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ObjectManager;
@@ -20,8 +31,14 @@ import will.sscmaster.UIController.SectionListAdapter;
 public class CourseView extends AppCompatActivity {
     public static final String COURSE = "putCourse";
     private CourseObject courseObject;
-    private ExpandableListAdapter expandableListAdapter;
+    private SectionListAdapter expandableListAdapter;
     private ExpandableListView expandableListView;
+    private FloatingActionButton details;
+    private FloatingActionButton cancel;
+    private EditText search;
+
+    private List<String> activities;
+    private List<List<String>> sections;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,25 +58,60 @@ public class CourseView extends AppCompatActivity {
 
     private void initView() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(courseObject.getCourseName());
+        toolbar.setSubtitle(courseObject.toString());
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        details = (FloatingActionButton) findViewById(R.id.details);
+        cancel = (FloatingActionButton) findViewById(R.id.cancel);
+
+        search = (EditText) findViewById(R.id.searchSection);
+    }
+
+    private void setSectionExpandableList() {
+        expandableListAdapter = new SectionListAdapter(this, ObjectManager.getInstance().getPair(courseObject));
+        expandableListView = (ExpandableListView) findViewById(R.id.sectionExpandable);
+        expandableListView.setAdapter(expandableListAdapter);
+        assignClickListener();
+        assignList();
+        assignTextChangeListener();
+    }
+
+    private void assignTextChangeListener() {
+        search.addTextChangedListener(new TextWatcher() {
+            List<List<String>> original = new ArrayList<>(sections);
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                sections.clear();
+                sections.addAll(original);
+                expandableListAdapter.notifyDataSetChanged();
+                if (s.toString().replaceAll("\\W", "").equals(""))
+                    return;
+                for (List<String> objList : sections) {
+                    Set<String> toRemove = new HashSet<>();
+                    for (String obj : objList)
+                        for (int i = 0; i < s.toString().length() - 1; i++)
+                            if (!obj.contains(s.toString().substring(i, i + 1)))
+                                toRemove.add(obj);
+                    objList.removeAll(toRemove);
+                }
+                expandableListAdapter.notifyDataSetChanged();
             }
         });
     }
 
-    private void updateList() {
-        expandableListAdapter = new SectionListAdapter(this, courseObject);
-        expandableListView = (ExpandableListView) findViewById(R.id.sectionExpandable);
-        expandableListView.setAdapter(expandableListAdapter);
-        assignClickListener();
+    private void assignList() {
+        activities = expandableListAdapter.getActivities();
+        sections = expandableListAdapter.getSections();
     }
 
+    @SuppressLint("StaticFieldLeak")
     private class RequestCourseDetail extends AsyncTask<CourseObject, String, String> {
         private Toast toast;
         @Override
@@ -77,7 +129,7 @@ public class CourseView extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String response) {
-            updateList();
+            setSectionExpandableList();
             toast.cancel();
         }
     }
@@ -87,6 +139,33 @@ public class CourseView extends AppCompatActivity {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
                 return true;
+            }
+        });
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+
+        final Context that = this;
+        details.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (courseObject.getDescription().length() > 1) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(that);
+                    builder.setMessage(courseObject.getDescription())
+                            .setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+
+                                }
+                            });
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+                } else {
+                    Toast.makeText(that, "No description for this course", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }

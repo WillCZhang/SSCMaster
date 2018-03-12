@@ -9,6 +9,7 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,14 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
     private List<String> activities;
     private List<List<String>> sections;
 
+    public List<String> getActivities() {
+        return activities;
+    }
+
+    public List<List<String>> getSections() {
+        return sections;
+    }
+
     static class GroupViewHolder {
         TextView tvTitle;
     }
@@ -35,21 +44,43 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
         TextView tvTitle;
     }
 
-    public SectionListAdapter(Context context, CourseObject courseObject) {
+    public SectionListAdapter(Context context, Map<String, List<SectionObject>> pair) {
         this.context = context;
-        initData(instance.getPair(courseObject));
+        initData(pair);
     }
 
     private void initData(Map<String, List<SectionObject>> pair) {
         activities = new ArrayList<>(pair.size());
         sections = new ArrayList<>();
+        String lecture = null;
+        List<String> lectureList = null;
         for (Map.Entry<String, List<SectionObject>> entry : pair.entrySet()) {
-            activities.add(entry.getKey());
             List<SectionObject> objects = entry.getValue();
             List<String> tempList = new ArrayList<>(objects.size());
-            for (SectionObject object : objects)
-                tempList.add(object.toString());
+            handleEachActivity(objects, tempList);
+            if (entry.getKey().toLowerCase().contains("lecture")) {
+                lecture = entry.getKey();
+                lectureList = tempList;
+                continue;
+            }
+            activities.add(entry.getKey());
             sections.add(tempList);
+        }
+        if (lecture != null) {
+            activities.add(0, lecture);
+            sections.add(0, lectureList);
+        }
+    }
+
+    private void handleEachActivity(List<SectionObject> objects, List<String> tempList) {
+        for (SectionObject object : objects) {
+            String objName = object.toString();
+            if (objName.toLowerCase().contains("block") || objName.toLowerCase().contains("full"))
+                tempList.add(tempList.size() == 0 ? 0 : tempList.size() - 1, objName);
+            else if (objName.length() <= 12)
+                tempList.add(0, objName);
+            else
+                tempList.add(objName);
         }
     }
 
