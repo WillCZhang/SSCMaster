@@ -1,7 +1,5 @@
 package will.sscmaster.Backend;
 
-import android.support.annotation.NonNull;
-
 import java.util.*;
 
 public class SectionObject {

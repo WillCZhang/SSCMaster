@@ -23,6 +23,7 @@ import will.sscmaster.R;
  */
 
 public class CourseListAdapter extends ArrayAdapter<String> {
+    public static final String DEPARTMENT_SPLIT = "@";
     private Context context;
     private List<String> values;
     private List<String> firstList;
@@ -45,7 +46,7 @@ public class CourseListAdapter extends ArrayAdapter<String> {
     }
 
     public String getDepartment(int position) {
-        return secondList.get(position);
+        return firstList.get(position) + DEPARTMENT_SPLIT + secondList.get(position);
     }
 
     public String getCourse(int position) {

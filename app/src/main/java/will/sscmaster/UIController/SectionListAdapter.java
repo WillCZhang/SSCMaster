@@ -9,14 +9,11 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ObjectManager;
 import will.sscmaster.Backend.SectionObject;
-import will.sscmaster.MainActivity;
 import will.sscmaster.R;
 
 /**

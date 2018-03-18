@@ -1,6 +1,7 @@
 package will.sscmaster.DataParser;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,6 +23,8 @@ import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ObjectManager;
 import will.sscmaster.Backend.SectionObject;
 
+import static will.sscmaster.UIController.CourseListAdapter.DEPARTMENT_SPLIT;
+
 /**
  * Created by Will on 2018/2/24.
  */
@@ -35,9 +38,10 @@ public class RequestData {
     private static ObjectManager objectManager = ObjectManager.getInstance();
     private static SectionObject lastSection;
 
-    public static void handleCoursesList(String department) {
+    public static String handleCoursesList(String faculty, String departmentUnmodified) {
+        String[] departmentString = departmentUnmodified.split(DEPARTMENT_SPLIT);
         try {
-            String coursesListText = reading(DEPARTMENT_URL + department);
+            String coursesListText = reading(DEPARTMENT_URL + departmentString[1]);
             Document coursesListDoc = Jsoup.parse(coursesListText);
             Elements tbodyElements = coursesListDoc.getElementsByTag("tbody");
             Element coursesListElement = tbodyElements.first();
@@ -50,8 +54,13 @@ public class RequestData {
                 String courseTitle = courseElement.getElementsByTag("td").get(1).text();
                 CourseObject temp = objectManager.addCourse(part1, part2);
                 temp.setCourseName(courseTitle);
+                temp.setFaculty(faculty);
+                temp.setDepartmentFullName(departmentString[0]);
             }
-        } catch (IOException ignored) {}
+            Log.i("tag!", "finished downloading data");
+        } catch (IOException ignored) {
+        }
+        return departmentString[1];
     }
 
     public static void addCourseContent(CourseObject course) {
@@ -71,9 +80,10 @@ public class RequestData {
             String pre = "";
             for (int i = 2; i < creditsAndDescription.size(); i++) {
                 String curr = creditsAndDescription.get(i).text();
-                if (!pre.equals(curr))
+                String modifiedCurr = curr.trim().toLowerCase().replaceAll("\\W", "");
+                if (!pre.equals(modifiedCurr))
                     reqs.append(curr).append("\n");
-                pre = curr;
+                pre = modifiedCurr;
             }
             course.setReqs(reqs.toString());
 
@@ -82,7 +92,8 @@ public class RequestData {
             Elements sectionElements = sectionTableElement.getElementsByTag("tr");
             for (Element section : sectionElements)
                 refreshEachSection(course, section);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
     private static synchronized void refreshEachSection(CourseObject editingCourse, Element sectionElement) throws IOException {
@@ -140,11 +151,8 @@ public class RequestData {
                 restricted = Integer.parseInt(seatsInfoArray[3]);
                 if (seatsInfoArray.length > 4)
                     restrictedTo = seatsInfoArray[4];
-            } catch (IndexOutOfBoundsException | NumberFormatException e) {
-                total = total == 0? 0 : total;
-                current = current == 0? 0 : current;
-                general = general == 0? 0 : general;
-                restricted = restricted == 0? 0 : restricted;
+            } catch (IndexOutOfBoundsException | NumberFormatException ignored) {
+
             }
         }
 
@@ -191,7 +199,8 @@ public class RequestData {
                 Time end = new Time(Integer.parseInt(time2[0]), Integer.parseInt(time2[1]), 0);
                 currentSection.addTime(days, start.toString(), end.toString());
             }
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
     }
 
     private static String getSeatsInfo(Element seatsInfoElement) {
@@ -243,7 +252,7 @@ public class RequestData {
     }
 
     @NonNull
-    public static String reading(String url) throws IOException {
+    private static String reading(String url) throws IOException {
         InputStream is = new URL(url).openStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
 

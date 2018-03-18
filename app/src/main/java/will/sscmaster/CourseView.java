@@ -4,8 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -21,6 +23,7 @@ import java.util.List;
 
 import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ObjectManager;
+import will.sscmaster.DataParser.FacultyDrawableHandler;
 import will.sscmaster.DataParser.RequestData;
 import will.sscmaster.Search.Search;
 import will.sscmaster.UIController.SectionListAdapter;
@@ -33,9 +36,6 @@ public class CourseView extends AppCompatActivity {
     private Button details;
     private Button cancel;
     private EditText search;
-
-    private List<String> activities;
-    private List<List<String>> sections;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +59,8 @@ public class CourseView extends AppCompatActivity {
         toolbar.setTitle(courseObject.getCourseName());
         toolbar.setSubtitle(courseObject.toString());
         setSupportActionBar(toolbar);
+        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
+        appBarLayout.setBackground(FacultyDrawableHandler.getDrawable(this, courseObject.getFaculty()));
 
         details = (Button) findViewById(R.id.details);
         cancel = (Button) findViewById(R.id.cancel);
@@ -71,7 +73,6 @@ public class CourseView extends AppCompatActivity {
         expandableListView = (ExpandableListView) findViewById(R.id.sectionExpandable);
         expandableListView.setAdapter(expandableListAdapter);
         assignClickListener();
-        assignList();
         assignTextChangeListener();
     }
 
@@ -87,7 +88,6 @@ public class CourseView extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                // TODO: bug!!! update section search view
                 if (s.toString().trim().equals("")) {
                     expandableListAdapter.stopSearching();
                     expandableListAdapter.notifyDataSetChanged();
@@ -100,11 +100,6 @@ public class CourseView extends AppCompatActivity {
                 result.clear();
             }
         });
-    }
-
-    private void assignList() {
-        activities = expandableListAdapter.getActivities();
-        sections = expandableListAdapter.getSections();
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -150,11 +145,12 @@ public class CourseView extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String req = courseObject.getReqs() == null? "" : courseObject.getReqs() + "\n";
+                String msg = courseObject.getDepartmentShortName() + " " + courseObject.getCourseNumber() + "\n\n" +
+                        req +
+                        courseObject.getDescription();
                 if (courseObject.getDescription().length() > 1) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(that);
-                    builder.setMessage(courseObject.getDepartmentShortName() + " " + courseObject.getCourseNumber() + "\n\n" +
-                            req +
-                            courseObject.getDescription())
+                    builder.setMessage(msg)
                             .setNegativeButton("OK", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
 

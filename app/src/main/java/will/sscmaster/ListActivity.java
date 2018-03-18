@@ -102,8 +102,7 @@ public class ListActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
             String department = params[0];
-            RequestData.handleCoursesList(department);
-            return department;
+            return RequestData.handleCoursesList(faculty, department);
         }
 
         @Override
@@ -130,8 +129,7 @@ public class ListActivity extends AppCompatActivity {
     public void updateToDepartment() {
         dataList.clear();
         List<String> temp = FacultyDepartmentPairHandler.getMap().get(faculty);
-        for (String department : temp)
-            dataList.add(department);
+        dataList.addAll(temp);
         listAdapter.notifyDataSetChanged();
     }
 }
