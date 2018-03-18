@@ -6,26 +6,23 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import will.sscmaster.Backend.CourseObject;
 import will.sscmaster.Backend.ObjectManager;
 import will.sscmaster.DataParser.RequestData;
+import will.sscmaster.Search.Search;
 import will.sscmaster.UIController.SectionListAdapter;
 
 public class CourseView extends AppCompatActivity {
@@ -33,8 +30,8 @@ public class CourseView extends AppCompatActivity {
     private CourseObject courseObject;
     private SectionListAdapter expandableListAdapter;
     private ExpandableListView expandableListView;
-    private FloatingActionButton details;
-    private FloatingActionButton cancel;
+    private Button details;
+    private Button cancel;
     private EditText search;
 
     private List<String> activities;
@@ -52,6 +49,7 @@ public class CourseView extends AppCompatActivity {
         Intent temp = this.getIntent();
         String course = temp.getStringExtra(COURSE);
         courseObject = ObjectManager.getInstance().getCourseObject(course);
+
         RequestCourseDetail requestCourseDetail = new RequestCourseDetail();
         requestCourseDetail.execute(courseObject);
     }
@@ -62,8 +60,8 @@ public class CourseView extends AppCompatActivity {
         toolbar.setSubtitle(courseObject.toString());
         setSupportActionBar(toolbar);
 
-        details = (FloatingActionButton) findViewById(R.id.details);
-        cancel = (FloatingActionButton) findViewById(R.id.cancel);
+        details = (Button) findViewById(R.id.details);
+        cancel = (Button) findViewById(R.id.cancel);
 
         search = (EditText) findViewById(R.id.searchSection);
     }
@@ -79,7 +77,8 @@ public class CourseView extends AppCompatActivity {
 
     private void assignTextChangeListener() {
         search.addTextChangedListener(new TextWatcher() {
-            List<List<String>> original = new ArrayList<>(sections);
+            private List<String> result = expandableListAdapter.getAllSection();
+
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
@@ -88,20 +87,17 @@ public class CourseView extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                sections.clear();
-                sections.addAll(original);
-                expandableListAdapter.notifyDataSetChanged();
-                if (s.toString().replaceAll("\\W", "").equals(""))
+                // TODO: bug!!! update section search view
+                if (s.toString().trim().equals("")) {
+                    expandableListAdapter.stopSearching();
+                    expandableListAdapter.notifyDataSetChanged();
                     return;
-                for (List<String> objList : sections) {
-                    Set<String> toRemove = new HashSet<>();
-                    for (String obj : objList)
-                        for (int i = 0; i < s.toString().length() - 1; i++)
-                            if (!obj.contains(s.toString().substring(i, i + 1)))
-                                toRemove.add(obj);
-                    objList.removeAll(toRemove);
                 }
-                expandableListAdapter.notifyDataSetChanged();
+                expandableListAdapter.startSearching();
+                result = expandableListAdapter.getAllSection();
+                Search.searchGivenString(s.toString(), result);
+                expandableListAdapter.addSearchResult(result);
+                result.clear();
             }
         });
     }
@@ -153,9 +149,12 @@ public class CourseView extends AppCompatActivity {
         details.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String req = courseObject.getReqs() == null? "" : courseObject.getReqs() + "\n";
                 if (courseObject.getDescription().length() > 1) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(that);
-                    builder.setMessage(courseObject.getDescription())
+                    builder.setMessage(courseObject.getDepartmentShortName() + " " + courseObject.getCourseNumber() + "\n\n" +
+                            req +
+                            courseObject.getDescription())
                             .setNegativeButton("OK", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
 

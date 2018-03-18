@@ -67,10 +67,15 @@ public class RequestData {
             course.setDescription(description.text());
 
             // dealing with reqs
-            String reqs = "";
-            for (int i = 2; i < creditsAndDescription.size(); i++)
-                reqs += creditsAndDescription.get(i).text() + "\n";
-            course.setReqs(reqs);
+            StringBuilder reqs = new StringBuilder();
+            String pre = "";
+            for (int i = 2; i < creditsAndDescription.size(); i++) {
+                String curr = creditsAndDescription.get(i).text();
+                if (!pre.equals(curr))
+                    reqs.append(curr).append("\n");
+                pre = curr;
+            }
+            course.setReqs(reqs.toString());
 
             // dealing with sections
             Element sectionTableElement = mainContentElement.getElementsByTag("tbody").first();

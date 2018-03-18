@@ -36,13 +36,14 @@
 
     <include layout="@layout/content_course_view" />
 
-    <android.support.design.widget.FloatingActionButton
+    <Button
         android:id="@+id/cancel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        android:background="@mipmap/exit" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/invisibleFab1"
@@ -55,14 +56,14 @@
         app:layout_anchorGravity="top"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
-    <android.support.design.widget.FloatingActionButton
+    <Button
         android:id="@+id/details"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="15dp"
         android:layout_gravity="top|end"
         app:layout_anchor="@id/invisibleFab1"
         app:layout_anchorGravity="top"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        android:background="@mipmap/details"/>
 
 </android.support.design.widget.CoordinatorLayout>

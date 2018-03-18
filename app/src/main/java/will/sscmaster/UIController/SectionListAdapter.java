@@ -28,6 +28,9 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
     private Context context;
     private List<String> activities;
     private List<List<String>> sections;
+    private boolean isSearching;
+    private List<String> searchResult;
+    private List<List<String>> result;
 
     public List<String> getActivities() {
         return activities;
@@ -46,6 +49,7 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
 
     public SectionListAdapter(Context context, Map<String, List<SectionObject>> pair) {
         this.context = context;
+        isSearching = false;
         initData(pair);
     }
 
@@ -70,6 +74,11 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
             activities.add(0, lecture);
             sections.add(0, lectureList);
         }
+
+        searchResult = new ArrayList<>(1);
+        searchResult.add("Search Result");
+        result = new ArrayList<>(1);
+        result.add(new ArrayList<String>());
     }
 
     private void handleEachActivity(List<SectionObject> objects, List<String> tempList) {
@@ -86,21 +95,29 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getGroupCount() {
+        if (isSearching)
+            return searchResult.size();
         return activities.size();
     }
 
     @Override
     public int getChildrenCount(int groupPosition) {
+        if (isSearching)
+            return result.get(groupPosition).size();
         return sections.get(groupPosition).size();
     }
 
     @Override
     public Object getGroup(int groupPosition) {
+        if (isSearching)
+            return searchResult.get(groupPosition);
         return activities.get(groupPosition);
     }
 
     @Override
     public Object getChild(int groupPosition, int childPosition) {
+        if (isSearching)
+            return result.get(groupPosition).get(childPosition);
         return sections.get(groupPosition).get(childPosition);
     }
 
@@ -131,7 +148,12 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
         } else {
             groupViewHolder = (GroupViewHolder) convertView.getTag();
         }
-        groupViewHolder.tvTitle.setText(activities.get(groupPosition));
+        String title;
+        if (isSearching)
+            title = searchResult.get(groupPosition);
+        else
+            title = activities.get(groupPosition);
+        groupViewHolder.tvTitle.setText(title);
         return convertView;
     }
 
@@ -147,8 +169,34 @@ public class SectionListAdapter extends BaseExpandableListAdapter {
         } else {
             groupViewHolder = (ChildViewHolder) convertView.getTag();
         }
-        groupViewHolder.tvTitle.setText(sections.get(groupPosition).get(childPosition));
+        String title;
+        if (isSearching)
+            title = result.get(groupPosition).get(childPosition);
+        else
+            title = sections.get(groupPosition).get(childPosition);
+        groupViewHolder.tvTitle.setText(title);
         return convertView;
+    }
+
+    public void startSearching() {
+        isSearching = true;
+    }
+
+    public void stopSearching() {
+        isSearching = false;
+    }
+
+    public void addSearchResult(List<String> list) {
+        result.get(0).clear();
+        result.get(0).addAll(list);
+        notifyDataSetChanged();
+    }
+
+    public List<String> getAllSection() {
+        List<String> result = new ArrayList<>();
+        for (List<String> list : sections)
+            result.addAll(list);
+        return result;
     }
 
     @Override
